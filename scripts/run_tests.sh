@@ -13,7 +13,7 @@ do
 
     [[ $HAS_TESTING == '0' ]] && continue
 
-    $CC $CFLAGS -DTEST=1 -o $TEST $SOURCE target/$BUILD/libcrequest.a
+    $CC $CFLAGS -DTEST=1 -o $TEST $SOURCE target/$BUILD/librequests.a
 
     if [ -e $TEST ]
     then

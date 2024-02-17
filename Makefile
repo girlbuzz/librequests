@@ -4,6 +4,9 @@ BINS=$(patsubst src/bin/%.c,target/$(BUILD)/%,$(wildcard src/bin/*.c))
 SOURCES=$(shell find src/ -not \( -path 'src/bin' -prune \) -type f -name '*.c')
 OBJS=$(patsubst src/%.c,target/$(BUILD)/.objs/%.o,$(SOURCES))
 
+STATIC=target/$(BUILD)/librequests.a
+DYNAMIC=target/$(BUILD)/librequests.so
+
 CFLAGS += -Iinclude
 
 ifeq ($(BUILD),debug)
@@ -16,7 +19,7 @@ else
 $(error build type specified is not defined (change the BUILD variable))
 endif
 
-.PHONY: all depend release debug shared static clean tests vars
+.PHONY: all clean release debug shared static depend tests vars
 .SUFFIXES: .c .o
 
 all: depend shared static $(BINS)
@@ -30,9 +33,9 @@ release:
 debug:
 	@BUILD=debug $(MAKE) --no-print-directory
 
-shared: target/$(BUILD)/librequests.so
+shared: $(DYNAMIC)
 
-static: target/$(BUILD)/librequests.a
+static: $(STATIC)
 
 depend: .depend
 
@@ -49,21 +52,21 @@ target/$(BUILD)/.objs/%.o: src/%.c
 	@echo "CC    $@"
 	@$(CC) $(CFLAGS) -c -o $@ $<
 
-target/$(BUILD)/%: src/bin/%.c target/$(BUILD)/librequests.a
+target/$(BUILD)/%: src/bin/%.c $(STATIC)
 	@mkdir -p $(shell dirname $@)
 	@echo "LD    $@"
 	@$(CC) $(CFLAGS) -o $@ $^
 
-target/$(BUILD)/librequests.so: $(OBJS)
+$(DYNAMIC): $(OBJS)
 	@echo "LD    $@"
 	@$(LD) $(LDFLAGS) -shared -o $@ $^
 
-target/$(BUILD)/librequests.a: $(OBJS)
+$(STATIC): $(OBJS)
 	@echo "AR    $@"
 	@$(AR) $(ARFLAGS) $@ $(OBJS) >/dev/null 2>&1
 
 tests: static
-	@CFLAGS="$(CFLAGS)" BUILD="$(BUILD)" ./scripts/run_tests.sh $(SOURCES)
+	@CFLAGS="$(CFLAGS)" BUILD="$(BUILD)" DEPS="$(STATIC)" ./scripts/run_tests.sh $(SOURCES)
 
 vars:
 	@printf 'BUILD=%s\n' "$(BUILD)"
