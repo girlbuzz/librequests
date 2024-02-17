@@ -143,7 +143,7 @@ int main() {
 
 	assert(url.authority && "no authority");
 	assert(!strcmp(url.authority->host, "www.example.com") && "host failed to parse");
-	assert(!strcmp(url.authority->userinfo, "april") && "userinfo failed to parse");
+	assert(!strcmp(url.authority->userinfo, "admin") && "userinfo failed to parse");
 	assert((url.authority->port == 200) && "userinfo failed to parse");
 
 	assert(!strcmp(kv_get_value(url.query, "password"), "abc123") && "query.password failed to parse");
