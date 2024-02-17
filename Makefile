@@ -16,7 +16,7 @@ else
 $(error build type not specified)
 endif
 
-.PHONY: all shared static clean vars
+.PHONY: all shared static clean tests vars
 .SUFFIXES: .c .o
 
 all: shared static $(BINS)
@@ -42,6 +42,9 @@ target/$(BUILD)/libcrequest.so: $(OBJS)
 target/$(BUILD)/libcrequest.a: $(OBJS)
 	@echo AR  $@
 	@$(AR) $(ARFLAGS) $@ $(OBJS) >/dev/null 2>&1
+
+tests: static
+	@CFLAGS="$(CFLAGS)" BUILD="$(BUILD)" ./scripts/run_tests.sh $(SOURCES)
 
 vars:
 	@printf 'BUILD=%s\n' "$(BUILD)"

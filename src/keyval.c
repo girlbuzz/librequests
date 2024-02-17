@@ -1,3 +1,5 @@
+#pragma testing
+
 #include <stdlib.h>
 #include <string.h>
 
