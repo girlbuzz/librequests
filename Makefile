@@ -13,7 +13,7 @@ ifeq ($(BUILD),debug)
 CFLAGS += -fPIC -g
 LDFLAGS += -g
 else ifeq ($(BUILD),release)
-CFLAGS += -fPIC -O2 -pipe -s
+CFLAGS += -fPIC -O2 -pipe
 LDFLAGS += -s
 else
 $(error build type specified is not defined (change the BUILD variable))
