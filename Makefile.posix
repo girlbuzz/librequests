@@ -5,10 +5,9 @@ OBJS=src/uri.o \
 
 CFLAGS += -Iinclude
 
-.PHONY: all clean
-.SUFFIXES: .c .o
-
 all: librequests.a
+
+.SUFFIXES: .c .o
 
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $<
