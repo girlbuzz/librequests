@@ -1,0 +1,5 @@
+/target
+
+# clangd stuff
+.cache/
+compile_commands.json
