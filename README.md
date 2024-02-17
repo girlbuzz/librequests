@@ -18,7 +18,7 @@ Binaries will be located in `./`.
 # Example
 
 ```c
-#include <stdio.h>
+#include <assert.h>
 #include <uri.h>
 
 int main(void) {
