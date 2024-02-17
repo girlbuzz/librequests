@@ -78,6 +78,6 @@ vars:
 	@printf 'CFLAGS=%s\n' "$(CFLAGS)"
 	@printf 'LDFLAGS=%s\n' "$(LDFLAGS)"
 
-compile_commands.json:
+compile_commands.json: $(SOURCES)
 	./scripts/compile_commands.sh
 
