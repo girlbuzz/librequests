@@ -8,7 +8,7 @@ CFLAGS += -Iinclude
 .PHONY: all clean
 .SUFFIXES: .c .o
 
-all: librequests.so librequests.a
+all: librequests.a
 
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $<

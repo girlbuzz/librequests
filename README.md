@@ -7,7 +7,7 @@ This is a library for handling network requests. It uses standard URI format for
 On any GNU/Linux system, or any system where you have access to GNUMake, use `gnumake release` to build release binaries.
 They will be located in `./target/release/`.
 
-On any POSIX system, there is a POSIX makefile available (`Makefile.posix`). This will not output a dynamic library
+On any POSIX system, there is a POSIX makefile available (`Makefile.posix`). This will not output a dynamic library (unless specified)
 since there is no POSIX standard for dynamic libraries. Binaries will be located in `./`.
 
 # Example
