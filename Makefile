@@ -10,10 +10,10 @@ DYNAMIC=target/$(BUILD)/librequests.so
 CFLAGS += -Iinclude
 
 ifeq ($(BUILD),debug)
-CFLAGS += -g
+CFLAGS += -fPIC -g
 LDFLAGS += -g
 else ifeq ($(BUILD),release)
-CFLAGS += -O2 -pipe -s
+CFLAGS += -fPIC -O2 -pipe -s
 LDFLAGS += -s
 else
 $(error build type specified is not defined (change the BUILD variable))
