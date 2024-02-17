@@ -30,9 +30,9 @@ release:
 debug:
 	@BUILD=debug $(MAKE) --no-print-directory
 
-shared: target/$(BUILD)/libcrequest.so
+shared: target/$(BUILD)/librequests.so
 
-static: target/$(BUILD)/libcrequest.a
+static: target/$(BUILD)/librequests.a
 
 depend: .depend
 
@@ -49,16 +49,16 @@ target/$(BUILD)/.objs/%.o: src/%.c
 	@echo "CC    $@"
 	@$(CC) $(CFLAGS) -c -o $@ $<
 
-target/$(BUILD)/%: src/bin/%.c target/$(BUILD)/libcrequest.a
+target/$(BUILD)/%: src/bin/%.c target/$(BUILD)/librequests.a
 	@mkdir -p $(shell dirname $@)
 	@echo "LD    $@"
 	@$(CC) $(CFLAGS) -o $@ $^
 
-target/$(BUILD)/libcrequest.so: $(OBJS)
+target/$(BUILD)/librequests.so: $(OBJS)
 	@echo "LD    $@"
 	@$(LD) $(LDFLAGS) -shared -o $@ $^
 
-target/$(BUILD)/libcrequest.a: $(OBJS)
+target/$(BUILD)/librequests.a: $(OBJS)
 	@echo "AR    $@"
 	@$(AR) $(ARFLAGS) $@ $(OBJS) >/dev/null 2>&1
 
