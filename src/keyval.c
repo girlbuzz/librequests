@@ -50,6 +50,9 @@ static struct keyval *resize(struct keyval *pairs, size_t new_capacity) {
 void cleanup_keyvals(struct keyval *pairs) {
 	struct keyval *pair;
 
+	if (!pairs)
+		return;
+
 	for (pair = pairs; pair->key; pair++) {
 		free(pair->key);
 		free(pair->value);
@@ -57,7 +60,12 @@ void cleanup_keyvals(struct keyval *pairs) {
 }
 
 void keyvals_free(struct keyval *pairs) {
-	struct keyval_pair_header *hdr = KV_GET_HEADER(pairs);
+	struct keyval_pair_header *hdr;
+
+	if (!pairs)
+		return;
+
+	hdr = KV_GET_HEADER(pairs);
 
 	cleanup_keyvals(pairs);
 
