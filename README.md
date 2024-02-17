@@ -1,4 +1,4 @@
-# libcrequest
+# librequests
 
 This is a library for handling network requests.
 It uses standard URI format for resources, it also includes a parser for URIs.
