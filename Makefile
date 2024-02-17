@@ -66,7 +66,7 @@ $(STATIC): $(OBJS)
 	@$(AR) $(ARFLAGS) $@ $(OBJS) >/dev/null 2>&1
 
 tests: static
-	@CFLAGS="$(CFLAGS)" BUILD="$(BUILD)" DEPS="$(STATIC)" ./scripts/run_tests.sh $(SOURCES)
+	@CC="$(CC)" CFLAGS="$(CFLAGS)" BUILD="$(BUILD)" DEPS="$(STATIC)" ./scripts/run_tests.sh $(SOURCES)
 
 vars:
 	@printf 'BUILD=%s\n' "$(BUILD)"
