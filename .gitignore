@@ -1,6 +1,11 @@
 /target
 .depend
 
+# files from posix make
+*.o
+*.a
+*.so
+
 # clangd stuff
 .cache/
 compile_commands.json

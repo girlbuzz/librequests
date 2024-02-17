@@ -1,0 +1,24 @@
+.POSIX:
+
+OBJS=src/uri.o \
+	 src/keyval.o
+
+CFLAGS += -Iinclude
+
+.PHONY: all clean
+.SUFFIXES: .c .o
+
+all: librequests.so librequests.a
+
+.c.o:
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+librequests.so: $(OBJS)
+	$(CC) $(LDFLAGS) -shared -o $@ $(OBJS)
+
+librequests.a: $(OBJS)
+	$(AR) $(ARFLAGS) $@ $(OBJS)
+
+clean:
+	rm -f $(OBJS) librequests.so librequests.a
+
