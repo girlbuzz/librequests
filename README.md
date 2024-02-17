@@ -1,14 +1,19 @@
 # libcrequest
 
-This is a library for handling network requests. It uses standard URI format for resources, it also includes a parser for URIs.
+This is a library for handling network requests.
+It uses standard URI format for resources, it also includes a parser for URIs.
 
 # How to Build
 
-On any GNU/Linux system, or any system where you have access to GNUMake, use `gnumake release` to build release binaries.
-They will be located in `./target/release/`.
+On any GNU/Linux system, or any system where you have access to GNU make,
+use `gmake release` to build release binaries.
+The libraries will be located in `./target/release/librequests.{a,so}`.
 
-On any POSIX system, there is a POSIX makefile available (`Makefile.posix`). This will not output a dynamic library (unless specified)
-since there is no POSIX standard for dynamic libraries. Binaries will be located in `./`.
+On any POSIX system, run `make -f Makefile.posix`.
+This will not output a dynamic library
+(unless specified -- `make -f Makefile.posix librequests.so`)
+since there is no POSIX standard for dynamic libraries.
+Binaries will be located in `./`.
 
 # Example
 
