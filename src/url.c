@@ -131,7 +131,6 @@ int parse_url(struct url *url, const char *urlstr) {
 	return 0;
 }
 
-
 #if TEST == 1
 #include <assert.h>
 
