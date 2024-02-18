@@ -133,10 +133,10 @@ void free_uri(struct uri *uri) {
 }
 
 /* this function does not deallocate any parts of the URI if an error occurs.
- * this is to give the user of the library to potentially recover from an error.
+ * this is to give the user of the library a chance to potentially recover from an error.
  * it is safe to call cleanup_uri on uri if an error occurs.
  * 
- * this function will not fix incorrectly formed URIs, it is strict. */
+ * this function will not fix incorrectly formed URIs. */
 int parse_uri(struct uri *uri, const char *uristr) {
 	const char *next;
 	size_t rest;
@@ -155,7 +155,7 @@ int parse_uri(struct uri *uri, const char *uristr) {
 
 	/* parse an authority if one exists. this can be an empty string. */
 	if (!strncmp(next, "//", 2) || *next == '[') {
-		next += *next == '[' ? 1 : 2;
+		next += *next == '/' + 1;
 
 		/* if we have an authority, it will always end with a / */
 		const char *const slash = strchr(next, '/');
@@ -163,15 +163,16 @@ int parse_uri(struct uri *uri, const char *uristr) {
 		if (!slash)
 			return 1;
 
-		const size_t authlen = slash ? slash - next : strlen(next);
+		/* casting here gets rid of a compiler warning. -Wsign-compare
+		 * both slash and next must be positive integers. they are pointers.
+		 * I'm not even sure why the compiler thinks either of these are a long int. */
+		const size_t authlen = slash ? (size_t)(slash - next) : strlen(next);
 
-		char *auth = strndup(next, authlen);
+		char *const auth = strndup(next, authlen);
 		uri->authority = parse_authority_alloc(auth);
 		free(auth);
 
 		next += authlen;
-	} else {
-		uri->authority = NULL;
 	}
 
 	/* from here, theres just the path, and potentially a ?query or #fragment */
@@ -183,7 +184,7 @@ int parse_uri(struct uri *uri, const char *uristr) {
 	rest = strlen(next);
 
 	/* because of our rest variable, we check for a fragment first. We wouldn't want to
-	 * set rest to be up to query only to then replace it with the start of fragment. */
+	 * overwrite rest if it's been set by the inq check. it's just easier to do them out of order. */
 	if (pound) {
 		uri->fragment = strdup(fragment);
 		rest = rest - strlen(pound);
