@@ -313,6 +313,14 @@ struct test tests[] = {
 		},
 		.path = "/etc/hostname",
 	},
+	{
+		.uri = "steam://run/440",
+		.scheme = "steam",
+		.authority = {
+			.host = "run",
+		},
+		.path = "/440",
+	},
 };
 
 void run_test(const struct test *test) {
@@ -342,6 +350,38 @@ void run_test(const struct test *test) {
 			fprintf(stderr, "User info does not match. Should be '%hu', was '%hu'\n", test->authority.port, uri.authority->port);
 			exit(1);
 		}
+	}
+
+	if (test->path && strcmp(uri.path, test->path)) {
+		fprintf(stderr, "Path failed to parse. Should be '%s', was '%s'\n", test->path, uri.path);
+		exit(1);
+	}
+
+	if (test->query.count > 0) {
+		size_t i;
+		
+		for (i = 0; i < test->query.count; i++) {
+			const char *var = kv_get_value(uri.query, test->query.vars[i].key);
+
+			if (!var) {
+				fprintf(stderr, "Value not found.\n");
+				exit(1);
+			}
+
+			if (strcmp(var, test->query.vars[i].value)) {
+				fprintf(stderr, "Value failed to parse. Should be '%s=%s', was '%s'\n",
+					test->query.vars[i].key,
+					test->query.vars[i].value,
+					var);
+
+				exit(1);
+			}
+		}
+	}
+
+	if (test->fragment && strcmp(uri.fragment, test->fragment)) {
+		fprintf(stderr, "Fragment failed to parse. Should be '%s', was '%s'\n", test->fragment, uri.fragment);
+		exit(1);
 	}
 
 	printf("Passed.\n");
