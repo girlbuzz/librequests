@@ -31,37 +31,39 @@ void cleanup_authority(struct authority *auth) {
 
 static int parse_authority(struct authority *auth, const char *authstr) {
 	char *n;
-	char *userinfo = NULL;
-	char *host = NULL;
-	unsigned short port = 0;
 
+	init_authority(auth);
+
+	/* parse a potential userinfo */
 	if ((n = strchr(authstr, '@'))) {
-		userinfo = strndup(authstr, n - authstr);
+		auth->userinfo = strndup(authstr, n - authstr);
 		authstr = n + 1;
 	}
 
-	if ((n = strchr(authstr, ':'))) {
-		host = strndup(authstr, n - authstr);
+	/* ipv6 can contain : and that will confuse us. handle that case differently */
+	if (*authstr == '[') {
+		const char *const end = strchr(authstr, ']');
 
-		if (*++n == '\0') {
-			free(userinfo);
-			free(host);
+		if (!end)
 			return 1;
-		}
 
-		port = atoi(n);
+		auth->host = strndup(authstr, end - authstr + 1);
+		authstr = end + 1;
 	} else {
-		if (*authstr == '\0') {
-			free(userinfo);
-			return 1;
+		if ((n = strchr(authstr, ':'))) {
+			auth->host = strndup(authstr, n - authstr);
+
+			if (*++n == '\0')
+				1;
+
+			auth->port = atoi(n);
+		} else {
+			if (*authstr == '\0')
+				auth->host = strdup("");
+			else
+				auth->host = strdup(authstr);
 		}
-
-		host = strdup(authstr);
 	}
-
-	auth->host = host;
-	auth->userinfo = userinfo;
-	auth->port = port;
 
 	return 0;
 }
@@ -79,8 +81,32 @@ static struct authority *parse_authority_alloc(const char *authstr) {
 
 /* QUERY */
 
-static int parse_query(struct keyval *pairs, const char *query) {
-	return 0;
+static struct keyval *parse_query(struct keyval *pairs, const char *query) {
+	char *mut_query = strdup(query);
+	char *saveptr;
+	char *s;
+
+	s = strtok_r(mut_query, "&", &saveptr);
+
+	if (s == NULL)
+		return NULL;
+
+	do {
+		char *value = strchr(s, '=');
+
+		if (value) {
+			*value = '\0';
+			value++;
+		} else {
+			value = "";
+		}
+
+		pairs = kv_set_value(pairs, s, value);
+	} while ((s = strtok_r(NULL, "&", &saveptr)) != NULL);
+
+	free(mut_query);
+
+	return pairs;
 }
 
 /* URL */
@@ -111,23 +137,38 @@ void free_uri(struct uri *uri) {
 	free(uri);
 }
 
+/* this function does not deallocate any parts of the URI if an error occurs.
+ * this is to give the user of the library to potentially recover from an error.
+ * it is safe to call cleanup_uri on uri if an error occurs.
+ * 
+ * this function will not fix incorrectly formed URIs, it is strict. */
 int parse_uri(struct uri *uri, const char *uristr) {
-	char *next;
+	const char *next;
+	size_t rest;
 
 	init_uri(uri);
 
-	uri->scheme = strndup(uristr, (next = strchr(uristr, ':')) - uristr);
+	/* get uri scheme. this part is required. */
+	const char *const colon = strchr(uristr, ':');
 
-	if (next == NULL)
+	if (!colon)
 		return 1;
 
-	if (!(*++next == '/'))
-		return 1;
+	uri->scheme = strndup(uristr, colon - uristr);
 
-	if (*++next == '/') {
-		next++;
+	next = colon + 1;
 
-		const size_t authlen = strchr(next, '/') - next;
+	/* parse an authority if one exists. this can be an empty string. */
+	if (!strncmp(next, "//", 2) || *next == '[') {
+		next += *next == '[' ? 1 : 2;
+
+		/* if we have an authority, it will always end with a / */
+		const char *const slash = strchr(next, '/');
+
+		if (!slash)
+			return 1;
+
+		const size_t authlen = slash ? slash - next : strlen(next);
 
 		char *auth = strndup(next, authlen);
 		uri->authority = parse_authority_alloc(auth);
@@ -138,24 +179,36 @@ int parse_uri(struct uri *uri, const char *uristr) {
 		uri->authority = NULL;
 	}
 
-	const char *const query = strchr(next, '?');
-	const char *const fragment = strchr(next, '#');
-	const size_t rest = strlen(next);
+	/* from here, theres just the path, and potentially a ?query or #fragment */
+	const char *const inq = strchr(next, '?');
+	const char *const query = inq + 1;
+	const char *const pound = strchr(next, '#');
+	const char *const fragment = pound + 1;
 
-	uri->query = keyval_alloc();
+	rest = strlen(next);
 
-	if (query) {
-		char *querystr = strndup(query, fragment - query);
+	/* because of our rest variable, we check for a fragment first. We wouldn't want to
+	 * set rest to be up to query only to then replace it with the start of fragment. */
+	if (pound) {
+		uri->fragment = strdup(fragment);
+		rest = rest - strlen(pound);
+	}
 
-		if (parse_query(uri->query, querystr))
+	/* finally, check for a query */
+	if (inq) {
+		const size_t fragment_len = pound ? strlen(pound) : 0;
+		char *querystr = strndup(query, strlen(query) - fragment_len);
+		rest = inq - next;
+
+		uri->query = keyval_alloc();
+
+		if ((uri->query = parse_query(uri->query, querystr)) == NULL)
 			return 1;
 
 		free(querystr);
 	}
 
-	if (fragment) {
-		uri->fragment = strdup(fragment);
-	}
+	uri->path = strndup(next, rest);
 
 	return 0;
 }
@@ -174,8 +227,6 @@ struct uri *parse_uri_alloc(const char *uristr) {
 #define TEST 1
 
 #if TEST == 1
-#include <assert.h>
-
 struct test {
 	const char *uri;
 	const char *scheme;
@@ -264,7 +315,47 @@ struct test tests[] = {
 	},
 };
 
+void run_test(const struct test *test) {
+	struct uri uri;
+
+	printf("Testing '%s'\n", test->uri);
+
+	parse_uri(&uri, test->uri);
+
+	if (test->scheme && strcmp(uri.scheme, test->scheme)) {
+		fprintf(stderr, "scheme does not match. Should be '%s', was '%s'\n", test->scheme, uri.scheme);
+		exit(1);
+	}
+
+	if (test->authority.host) {
+		if (test->authority.userinfo && strcmp(uri.authority->userinfo, test->authority.userinfo)) {
+			fprintf(stderr, "User info does not match. Should be '%s', was '%s'\n", test->authority.userinfo, uri.authority->userinfo);
+			exit(1);
+		}
+
+		if (test->authority.host && strcmp(uri.authority->host, test->authority.host)) {
+			fprintf(stderr, "User info does not match. Should be '%s', was '%s'\n", test->authority.host, uri.authority->host);
+			exit(1);
+		}
+
+		if (test->authority.port && uri.authority->port != test->authority.port) {
+			fprintf(stderr, "User info does not match. Should be '%hu', was '%hu'\n", test->authority.port, uri.authority->port);
+			exit(1);
+		}
+	}
+
+	printf("Passed.\n");
+
+	cleanup_uri(&uri);
+}
+
 int main() {
+	size_t i;
+
+	for (i = 0; i < sizeof(tests) / sizeof(struct test); i++) {
+		run_test(&tests[i]);
+	}
+
 	return 0;
 }
 #endif
