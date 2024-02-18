@@ -59,7 +59,7 @@ void cleanup_keyvals(struct keyval *pairs) {
 	}
 }
 
-void keyvals_free(struct keyval *pairs) {
+void free_keyvals(struct keyval *pairs) {
 	struct keyval_pair_header *hdr;
 
 	if (!pairs)
@@ -103,11 +103,9 @@ static struct keyval *kv_add_new_value(struct keyval *pairs, const char *key, co
 		;
 
 	if (i == hdr->capacity) {
-		if (!(pairs = resize(pairs, hdr->capacity ? hdr->capacity : 1 * 2)))
+		if (!(pairs = resize(pairs, hdr->capacity ? hdr->capacity * 2 : 8)))
 			return NULL;
 	}
-
-	free(pairs[i].key);
 
 	pairs[i].key = strdup(key);
 	pairs[i].value = strdup(value);
@@ -132,6 +130,8 @@ struct keyval *kv_clear_key(struct keyval *pairs, const char *key) {
 	struct keyval *kv = kv_get_mut_pair(pairs, key);
 
 	if (kv) {
+		free(kv->key);
+		kv->key = NULL;
 		free(kv->value);
 		kv->value = NULL;
 	}
@@ -140,10 +140,14 @@ struct keyval *kv_clear_key(struct keyval *pairs, const char *key) {
 }
 
 #if TEST == 1
+#include <stdio.h>
 #include <assert.h>
+
+#define STR "Hello!"
 
 int main() {
 	struct keyval *kv = keyval_alloc();
+	size_t i;
 
 	kv = kv_set_value(kv, "hello", "world");
 	kv = kv_set_value(kv, "goodbye", "world");
@@ -155,7 +159,18 @@ int main() {
 	assert(kv_get_value(kv, "goodbye") == NULL);
 	assert(kv_get_value(kv, "non-existent key") == NULL);
 
-	keyvals_free(kv);
+	/* this test was added to test actually reallocating a lot of times. */
+	for (i = 0; i < 1000; i++) {
+		char buffer[512];
+		snprintf(buffer, sizeof(buffer), STR "%lu", i);
+
+		kv = kv_set_value(kv, buffer, "statement");
+	}
+
+	assert(kv_get_value(kv, STR "123") != NULL);
+	assert(!strcmp(kv_get_value(kv, STR "123"), "statement") && "stress test somehow failed");
+
+	free_keyvals(kv);
 
 	return 0;
 }

@@ -5,11 +5,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
 #include <keyval.h>
 #include <uri.h>
 
@@ -54,7 +49,7 @@ static int parse_authority(struct authority *auth, const char *authstr) {
 			auth->host = strndup(authstr, n - authstr);
 
 			if (*++n == '\0')
-				1;
+				return 1;
 
 			auth->port = atoi(n);
 		} else {
@@ -124,7 +119,7 @@ void cleanup_uri(struct uri *uri) {
 	cleanup_authority(uri->authority);
 	free(uri->authority);
 	free(uri->path);
-	keyvals_free(uri->query);
+	free_keyvals(uri->query);
 	free(uri->fragment);
 }
 

@@ -12,7 +12,7 @@ struct keyval *keyval_alloc();
 
 void cleanup_keyvals(struct keyval *pairs);
 
-void keyvals_free(struct keyval *pairs);
+void free_keyvals(struct keyval *pairs);
 
 struct keyval *kv_get_mut_pair(struct keyval *pairs, const char *key);
 
