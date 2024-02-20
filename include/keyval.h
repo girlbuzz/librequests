@@ -8,6 +8,9 @@ struct keyval {
 	char *value;
 };
 
+#define keyval_iter(__pair, __pairs) \
+	for (struct keyval *__pair = __pairs; __pair->key && __pair->value; __pair++)
+
 struct keyval *keyval_alloc();
 
 void cleanup_keyvals(struct keyval *pairs);
