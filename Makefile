@@ -10,7 +10,7 @@ DYNAMIC=target/$(BUILD)/librequests.so
 CFLAGS += -Iinclude
 
 ifeq ($(BUILD),debug)
-CFLAGS += -fPIC -g -fsanitize=address -Wall -Wextra -Werror -Wno-unknown-pragmas
+CFLAGS += -fPIC -g -fsanitize=address -fsanitize=undefined -Wall -Wextra -Werror -Wno-unknown-pragmas
 LDFLAGS += -g
 else ifeq ($(BUILD),release)
 CFLAGS += -fPIC -O2 -pipe
