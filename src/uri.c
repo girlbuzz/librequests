@@ -155,7 +155,7 @@ int parse_uri(struct uri *uri, const char *uristr) {
 
 	/* parse an authority if one exists. this can be an empty string. */
 	if (!strncmp(next, "//", 2) || *next == '[') {
-		next += *next == '/' + 1;
+		next += (*next == '/') + 1;
 
 		/* if we have an authority, it will always end with a / */
 		const char *const slash = strchr(next, '/');
@@ -219,8 +219,6 @@ struct uri *parse_uri_alloc(const char *uristr) {
 
 	return uri;
 }
-
-#define TEST 1
 
 #if TEST == 1
 struct test {
@@ -360,7 +358,7 @@ void run_test(const struct test *test) {
 			const char *var = kv_get_value(uri.query, test->query.vars[i].key);
 
 			if (!var) {
-				fprintf(stderr, "Value not found.\n");
+				fprintf(stderr, "Value not found for key '%s'.\n", tests->query.vars[i].key);
 				exit(1);
 			}
 

@@ -1,6 +1,8 @@
 #ifndef __URL_H
 #define __URL_H
 
+#include <keyval.h>
+
 struct authority {
 	char *userinfo;
 	char *host;
