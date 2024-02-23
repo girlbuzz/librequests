@@ -320,34 +320,32 @@ struct test tests[] = {
 void run_test(const struct test *test) {
 	struct uri uri;
 
-	printf("Testing '%s'\n", test->uri);
-
 	parse_uri(&uri, test->uri);
 
 	if (test->scheme && strcmp(uri.scheme, test->scheme)) {
-		fprintf(stderr, "scheme does not match. Should be '%s', was '%s'\n", test->scheme, uri.scheme);
+		fprintf(stderr, "scheme does not match on '%s'. Should be '%s', was '%s'\n", test->uri, test->scheme, uri.scheme);
 		exit(1);
 	}
 
 	if (test->authority.host) {
 		if (test->authority.userinfo && strcmp(uri.authority->userinfo, test->authority.userinfo)) {
-			fprintf(stderr, "User info does not match. Should be '%s', was '%s'\n", test->authority.userinfo, uri.authority->userinfo);
+			fprintf(stderr, "User info does not match in '%s'. Should be '%s', was '%s'\n", test->uri, test->authority.userinfo, uri.authority->userinfo);
 			exit(1);
 		}
 
 		if (test->authority.host && strcmp(uri.authority->host, test->authority.host)) {
-			fprintf(stderr, "User info does not match. Should be '%s', was '%s'\n", test->authority.host, uri.authority->host);
+			fprintf(stderr, "User info does not match in '%s'. Should be '%s', was '%s'\n", test->uri, test->authority.host, uri.authority->host);
 			exit(1);
 		}
 
 		if (test->authority.port && uri.authority->port != test->authority.port) {
-			fprintf(stderr, "User info does not match. Should be '%hu', was '%hu'\n", test->authority.port, uri.authority->port);
+			fprintf(stderr, "User info does not match in '%s'. Should be '%hu', was '%hu'\n", test->uri, test->authority.port, uri.authority->port);
 			exit(1);
 		}
 	}
 
 	if (test->path && strcmp(uri.path, test->path)) {
-		fprintf(stderr, "Path failed to parse. Should be '%s', was '%s'\n", test->path, uri.path);
+		fprintf(stderr, "Path failed to parse in '%s'. Should be '%s', was '%s'\n", test->uri, test->path, uri.path);
 		exit(1);
 	}
 
@@ -358,12 +356,13 @@ void run_test(const struct test *test) {
 			const char *var = kv_get_value(uri.query, test->query.vars[i].key);
 
 			if (!var) {
-				fprintf(stderr, "Value not found for key '%s'.\n", tests->query.vars[i].key);
+				fprintf(stderr, "Value not found for key '%s' in '%s'.\n", test->query.vars[i].key, test->uri);
 				exit(1);
 			}
 
 			if (strcmp(var, test->query.vars[i].value)) {
-				fprintf(stderr, "Value failed to parse. Should be '%s=%s', was '%s'\n",
+				fprintf(stderr, "Value failed to parse in '%s'. Should be '%s=%s', was '%s'\n",
+                    test->uri,
 					test->query.vars[i].key,
 					test->query.vars[i].value,
 					var);
@@ -377,8 +376,6 @@ void run_test(const struct test *test) {
 		fprintf(stderr, "Fragment failed to parse. Should be '%s', was '%s'\n", test->fragment, uri.fragment);
 		exit(1);
 	}
-
-	printf("Passed.\n");
 
 	cleanup_uri(&uri);
 }
